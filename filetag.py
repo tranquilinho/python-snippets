@@ -46,5 +46,9 @@ if rating >= 0:
     update=True
 
 if update:
-    os.rename(params.file, newTitle)
+    try:
+      os.rename(params.file, newTitle)
+    except:
+      print "File %s not found" %(params.file)
+      os.exit(1)
     print "Changed from %s to %s" %(params.file, newTitle)
