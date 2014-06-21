@@ -21,14 +21,13 @@ parser.add_argument('file')
 params = parser.parse_args()
 
 rating=""
-update=True
 
 # easyMP3 = MP3(params.file)
 # easyMP3.pprint()
 # exit(0)
 
 song = mutagen.oggvorbis.Open(params.file)
-
+update= False
 updateRating = True
 if params.fiveStars:
     rating="5"
@@ -41,14 +40,21 @@ elif params.removeStars:
 else:
     updateRating = False
 
-if params.printAll:
-	update=False
-
-oldTitle = song.tags['title'][0]
-newTitle = oldTitle
 
 if params.newTitle:
     newTitle = params.newTitle
+    update = True
+else:
+    try:
+        newTitle = song.tags['title'][0]
+    except:
+        newTitle= ""
+
+if params.newTags:
+    tags = "@%s@" %(params.newTags)
+    # !!! put old tags in a set so as to not destroy them
+    newTitle = re.sub("@.*@","", newTitle)
+    newTitle = newTitle + tags
     update = True
 
 if updateRating:
@@ -58,21 +64,23 @@ if updateRating:
     newTitle = newTitle + rating
     update = True
 
-if params.newTags:
-    tags = "@%s@" %(params.newTags)
-    # !!! put old tags in a set so as to not destroy them
-    newTitle = re.sub("@.*@","", newTitle)
-    newTitle = newTitle + tags
+if update:
+    song["title"] = newTitle
+
+if params.genre != False:
+    song["genre"]= params.genre
+    update = True
+
+if params.artist != False:
+    song["artist"]= params.artist
+    update = True
+    
+if params.album != False:
+    song["album"]= params.album
     update = True
 
 if update:
-    song["title"] = newTitle
-    song["artist"]= params.artist
-    song["album"]= params.album
-    song["genre"]= params.genre
     song.save()
-    print "Changed from '%s' to '%s'" %(oldTitle,newTitle)
-
 elif params.printAll:
     for k,v in song.tags.items():
         print "'%s' %s" % (k,v)
